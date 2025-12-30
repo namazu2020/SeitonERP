@@ -1,0 +1,220 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  sku             String   @unique
+  name            String
+  description     String?
+  category        String
+  brand           String?
+  
+  // Compatibility: JSON string for SQLite flexibility
+  compatibility   String?  // [ { brand: string, model: string, year_start: number, year_end: number } ]
+
+  stockActual     Int      @default(0)
+  stockMin        Int      @default(0)
+  location        String?  // Physical location (shelf/row)
+  
+  priceList       Float    // Base price
+  ivaRate         Float    @default(21.0) // IVA percentage
+  
+  sales           SaleItem[]
+  stockMovements  StockMovement[]
+  
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@index([category])
+  @@index([brand])
+  @@index([name])
+}
+
+model Client {
+  id              String   @id @default(cuid())
+  name            String
+  email           String?
+  phone           String?
+  address         String?
+  taxId           String   @unique // CUIT or DNI
+  taxCondition    String   @default("Consumidor Final") // Responsable Inscripto, Monotributista, etc.
+  
+  sales           Sale[]
+  transactions    ClientTransaction[]
+  currentAccountBalance Float @default(0)
+  currentAccountEnabled Boolean @default(false)
+  
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+}
+
+model Sale {
+  id              String   @id @default(cuid())
+  invoiceNumber   String   @unique // Generated number
+  invoiceType     String   @default("B") // A, B, C
+  
+  clientId        String?
+  client          Client?  @relation(fields: [clientId], references: [id])
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  
+  items           SaleItem[]
+  
+  subtotal        Float
+  taxAmount       Float    // Total IVA
+  total           Float
+  
+  paymentMethod   String   @default("Efectivo") // Cash, Credit, Transfer
+  
+  cashMovementId  String?  @unique
+  cashMovement    CashMovement? @relation(fields: [cashMovementId], references: [id])
+  
+  createdAt       DateTime @default(now())
+
+  @@index([clientId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model SaleItem {
+  id              String   @id @default(cuid())
+  saleId          String
+  sale            Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id])
+  
+  sku             String   // Snapshot for history
+  name            String   // Snapshot
+  quantity        Int
+  priceAtSale     Float    // Price snapshot (base)
+  taxRateAtSale   Float    // IVA snapshot
+  totalAtSale     Float    // Total for this item (including tax)
+
+  @@index([saleId])
+  @@index([productId])
+}
+
+model CashMovement {
+  id              String   @id @default(cuid())
+  type            String   // INCOME or EXPENSE
+  amount          Float
+  description     String
+  category        String?  // Sale, Refund, Expense, Initial
+  
+  sale            Sale?
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  
+  closingId       String?
+  closing         CashClosing? @relation(fields: [closingId], references: [id])
+
+  createdAt       DateTime @default(now())
+
+  @@index([type])
+  @@index([closingId])
+  @@index([createdAt])
+}
+
+model CashClosing {
+  id              String   @id @default(cuid())
+  date            DateTime @default(now())
+  initialAmount   Float
+  totalIncome     Float    @default(0)
+  totalExpense    Float    @default(0)
+  finalAmount     Float    @default(0)
+  observations    String?
+  
+  status          String   @default("OPEN") // OPEN or CLOSED
+  openedAt        DateTime @default(now())
+  closedAt        DateTime?
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+
+  movements       CashMovement[]
+
+  @@index([status])
+  @@index([date])
+}
+
+model Config {
+  id              String   @id @default("default")
+  companyName     String   @default("Seiton Motors")
+  taxId           String   @default("30-00000000-0") // Company CUIT
+  address         String   @default("Calle Falsa 123, Ciudad")
+  phone           String?
+  email           String?
+  logoBase64      String?  
+  
+  vehicleDatabase String?  // JSON string
+  categories      String?  // JSON string
+  
+  updatedAt       DateTime @updatedAt
+}
+
+model ClientTransaction {
+  id              String   @id @default(cuid())
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id])
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  
+  type            String   // SALE, PAYMENT, ADJUSTMENT
+  amount          Float    // + adds debt, - reduces debt
+  description     String
+  
+  saleId          String?  // Reference to sale if applicable
+  
+  createdAt       DateTime @default(now())
+
+  @@index([clientId])
+  @@index([createdAt])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // Hashed
+  role      String   @default("EMPLOYEE") // ADMIN | EMPLOYEE
+  name      String?
+  
+  sales           Sale[]
+  cashMovements   CashMovement[]
+  cashClosings    CashClosing[]
+  clientTransactions ClientTransaction[]
+  stockMovements  StockMovement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StockMovement {
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  
+  type            String   // IN, OUT, ADJUST
+  quantity        Int      // Change in stock
+  reason          String?  // Sale, Purchase, Adjustment, Damage, etc.
+  
+  createdAt       DateTime @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
+}
