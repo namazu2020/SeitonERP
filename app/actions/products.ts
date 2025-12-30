@@ -10,10 +10,13 @@ const ProductSchema = z.object({
     name: z.string().min(1, "Nombre es requerido"),
     category: z.string().min(1, "Categoría es requerida"),
     priceList: z.number().min(0),
+    purchasePrice: z.number().min(0),
     stockActual: z.number().min(0),
     stockMin: z.number().min(0),
     location: z.string().optional(),
     compatibility: z.string().optional(),
+    factoryCode: z.string().optional(),
+    supplier: z.string().optional(),
 });
 
 export async function getProducts(query?: string) {

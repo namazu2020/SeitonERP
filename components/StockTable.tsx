@@ -72,12 +72,12 @@ export default function StockTable({ products, onEdit, role }: StockTableProps) 
                 <table className="w-full text-left text-sm border-separate border-spacing-y-2 px-8">
                     <thead>
                         <tr className="text-[#75B9BE]/60 font-black text-[10px] uppercase tracking-[0.2em]">
-                            <th className="px-6 py-4">SKU / Identificador</th>
-                            <th className="px-6 py-4">Descripción / Compatibilidad</th>
-                            <th className="px-6 py-4">Precio (IVA INC.)</th>
-                            <th className="px-6 py-4">Disponibilidad</th>
-                            <th className="px-6 py-4">Ubicación</th>
-                            <th className="px-6 py-4 text-right">Gestión</th>
+                            <th className="px-6 py-4">SKU / FÁBRICA</th>
+                            <th className="px-6 py-4">PRODUCTO / PROVEEDOR</th>
+                            <th className="px-6 py-4">PRECIOS (COMPRA/VENTA)</th>
+                            <th className="px-6 py-4">STOCK</th>
+                            <th className="px-6 py-4">UBICACIÓN</th>
+                            <th className="px-6 py-4 text-right">ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -89,37 +89,45 @@ export default function StockTable({ products, onEdit, role }: StockTableProps) 
                             return (
                                 <tr key={product.id} className="group hover:scale-[1.005] transition-all duration-300">
                                     <td className="px-6 py-5 bg-[#0A2633]/50 rounded-l-2xl border-y border-l border-[#1D546D]/10 group-hover:border-[#5F9598]/30 group-hover:bg-[#0A2633]">
-                                        <span className="font-mono text-xs font-bold text-[#75B9BE]">{product.sku}</span>
-                                        <div className="mt-1">
-                                            <span className="bg-[#1D546D]/20 text-[#75B9BE] px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border border-[#1D546D]/10">
-                                                {product.category}
-                                            </span>
+                                        <div className="flex flex-col">
+                                            <span className="font-mono text-xs font-bold text-[#75B9BE]">{product.sku}</span>
+                                            {product.factoryCode && (
+                                                <span className="text-[9px] text-white/40 font-bold uppercase mt-1">Fáb: {product.factoryCode}</span>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="px-6 py-5 bg-[#0A2633]/50 border-y border-[#1D546D]/10 group-hover:border-[#5F9598]/30 group-hover:bg-[#0A2633]">
-                                        <p className="font-black text-[#FFFFFF] group-hover:text-[#75B9BE] transition-colors">{product.name}</p>
+                                        <p className="font-black text-[#FFFFFF] group-hover:text-[#75B9BE] transition-colors leading-tight">{product.name}</p>
+                                        <div className="flex items-center gap-2 mt-1.5">
+                                            <span className="bg-[#1D546D]/30 text-[#75B9BE] px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border border-[#1D546D]/20">
+                                                {product.category}
+                                            </span>
+                                            {product.supplier && (
+                                                <span className="text-[8px] text-[#75B9BE]/60 font-bold uppercase tracking-widest">
+                                                    Prov: {product.supplier}
+                                                </span>
+                                            )}
+                                        </div>
 
-                                        {/* Display Compatibility List */}
                                         {vehicles.length > 0 && (
-                                            <div className="mt-2 space-y-1">
+                                            <div className="mt-3 space-y-1">
                                                 {vehicles.slice(0, 2).map((v: any, idx: number) => (
-                                                    <div key={idx} className="flex items-center gap-1.5 text-[10px] text-[#75B9BE] font-bold">
-                                                        <Car className="h-3 w-3 opacity-70" />
+                                                    <div key={idx} className="flex items-center gap-1.5 text-[9px] text-[#75B9BE]/50 font-medium">
+                                                        <Car className="h-2.5 w-2.5 opacity-60" />
                                                         <span>{v.brand} {v.model} {v.year ? `(${v.year})` : ''}</span>
                                                     </div>
                                                 ))}
-                                                {vehicles.length > 2 && (
-                                                    <div className="flex items-center gap-1.5 text-[9px] text-[#75B9BE]/60 font-black uppercase tracking-wider pl-1">
-                                                        <Layers className="h-2.5 w-2.5" />
-                                                        <span>+{vehicles.length - 2} Modelos más...</span>
-                                                    </div>
-                                                )}
                                             </div>
                                         )}
                                     </td>
                                     <td className="px-6 py-5 bg-[#0A2633]/50 border-y border-[#1D546D]/10 group-hover:border-[#5F9598]/30 group-hover:bg-[#0A2633]">
-                                        <p className="font-black text-lg text-[#FFFFFF] tracking-tight">{formatCurrencyARS(finalPrice)}</p>
-                                        <p className="text-[10px] text-[#75B9BE]/40 font-bold uppercase tracking-tighter">Neto: {formatCurrencyARS(product.priceList)}</p>
+                                        <div className="flex flex-col">
+                                            <span className="text-lg font-black text-[#FFFFFF] tracking-tight">{formatCurrencyARS(finalPrice)}</span>
+                                            <div className="flex flex-col text-[9px] font-bold uppercase tracking-tighter mt-0.5">
+                                                <span className="text-emerald-500/70">Costo: {formatCurrencyARS(product.purchasePrice)}</span>
+                                                <span className="text-[#75B9BE]/40">Venta: {formatCurrencyARS(product.priceList)} + IVA</span>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-5 bg-[#0A2633]/50 border-y border-[#1D546D]/10 group-hover:border-[#5F9598]/30 group-hover:bg-[#0A2633]">
                                         <div className="flex items-center gap-3">

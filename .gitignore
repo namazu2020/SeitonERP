@@ -10,6 +10,21 @@
 !.yarn/releases
 !.yarn/versions
 
+# --- Base de Datos (SQLite) ---
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# --- Prisma ---
+# Mantén schema.prisma y migraciones, pero ignora la DB
+/prisma/*.db
+/prisma/*.db-journal
+
+# --- Variables de Entorno (CRÍTICO) ---
+.env
+.env*.local
+
 # testing
 /coverage
 

@@ -75,9 +75,12 @@ export function useProductForm(product: Product | null, onClose: () => void) {
         name: product?.name || "",
         category: product?.category || "",
         priceList: product?.priceList || 0,
+        purchasePrice: product?.purchasePrice || 0,
         stockActual: product?.stockActual || 0,
         stockMin: product?.stockMin || 0,
         location: product?.location || "",
+        factoryCode: product?.factoryCode || "",
+        supplier: product?.supplier || "",
         compatibility: parseCompatibility(product?.compatibility),
     });
 
@@ -210,7 +213,7 @@ export function useProductForm(product: Product | null, onClose: () => void) {
         loading,
         formData,
         setFormData,
-        finalPrice: formData.priceList * 1.21,
+        finalPrice: (formData.priceList || 0) * 1.21,
 
         // Data
         brands,

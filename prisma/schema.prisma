@@ -25,8 +25,12 @@ model Product {
   stockMin        Int      @default(0)
   location        String?  // Physical location (shelf/row)
   
-  priceList       Float    // Base price
+  priceList       Float    // Base sale price (pre-tax)
+  purchasePrice   Float    @default(0) // Cost price
   ivaRate         Float    @default(21.0) // IVA percentage
+  
+  factoryCode     String?
+  supplier        String?
   
   sales           SaleItem[]
   stockMovements  StockMovement[]

@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import StockTable from "@/components/StockTable";
 import ProductForm from "@/components/ProductForm";
-import { Plus, Package, TrendingDown, Layers, CheckCircle } from "lucide-react";
+import BulkImportModal from "@/components/BulkImportModal";
+import { Plus, Package, TrendingDown, Layers, CheckCircle, Upload } from "lucide-react";
 import { getProducts } from "@/app/actions/products";
 import { getUser } from "@/app/actions/auth";
 import { Product } from "@prisma/client";
@@ -11,6 +12,7 @@ import { Product } from "@prisma/client";
 export default function StockPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [showForm, setShowForm] = useState(false);
+    const [showImport, setShowImport] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [stats, setStats] = useState({ total: 0, lowStock: 0, categories: 0 });
     const [userRole, setUserRole] = useState<string>("");
@@ -54,14 +56,25 @@ export default function StockPage() {
                     <p className="text-[#75B9BE] font-bold mt-2 uppercase tracking-[0.2em] text-xs">Administración central de repuestos</p>
                 </div>
 
-                <button
-                    onClick={() => setShowForm(true)}
-                    className="group relative flex items-center gap-4 bg-[#75B9BE] text-[#061E29] px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-[#75B9BE]/20 hover:bg-[#FFFFFF] hover:-translate-y-1 transition-all active:scale-95 overflow-hidden"
-                >
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    <Plus className="h-5 w-5 relative z-10" />
-                    <span className="relative z-10">Cargar Nuevo Producto</span>
-                </button>
+                <div className="flex gap-4">
+                    {userRole === "ADMIN" && (
+                        <button
+                            onClick={() => setShowImport(true)}
+                            className="flex items-center gap-3 bg-[#0A2633] border border-[#1D546D]/40 text-[#75B9BE] px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-[#1D546D]/20 transition-all border-premium"
+                        >
+                            <Upload className="h-5 w-5" />
+                            <span>Importar Excel</span>
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="group relative flex items-center gap-4 bg-[#75B9BE] text-[#061E29] px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-sm shadow-2xl shadow-[#75B9BE]/20 hover:bg-[#FFFFFF] hover:-translate-y-1 transition-all active:scale-95 overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                        <Plus className="h-5 w-5 relative z-10" />
+                        <span className="relative z-10">Cargar Nuevo Producto</span>
+                    </button>
+                </div>
             </div>
 
             {/* Quick Overview Cards */}
@@ -106,12 +119,22 @@ export default function StockPage() {
                 </div>
             </div>
 
-            {/* Modal Form */}
+            {/* Modals */}
             {showForm && (
                 <ProductForm
                     onClose={handleCloseForm}
                     product={selectedProduct}
                     role={userRole}
+                />
+            )}
+
+            {showImport && (
+                <BulkImportModal
+                    onClose={() => setShowImport(false)}
+                    onSuccess={() => {
+                        setShowImport(false);
+                        fetchProducts();
+                    }}
                 />
             )}
         </div>
